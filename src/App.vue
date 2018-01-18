@@ -1,5 +1,5 @@
 <template>
-  <main id="app">
+  <main id="app" ref="app">
     <div class="header"></div>
     <transition :name="transitionName">
       <router-view class="page" :class="{'no-animate': isAnimate}"></router-view>
@@ -54,16 +54,34 @@
     created () {
       this.resetPageKey('animate')
     },
+    mounted () {
+      this.$refs.app.addEventListener('touchstart', this.touchstart, false)
+      this.$refs.app.addEventListener('touchend', this.touchend, false)
+    },
     data () {
       return {
         transitionName: 'slide-left',
-        isAnimate: false
+        isAnimate: false,
+        isTouch: false
+      }
+    },
+    methods: {
+      touchstart (e) {
+        const max = this.$refs.app.clientWidth
+        if (e.touches[0].clientX <= 30 || max - e.touches[0].clientX <= 100) {
+          this.isTouch = true
+        }
+      },
+      touchend (e) {
+        setTimeout(() => {
+          this.isTouch = false
+        }, 500)
       }
     },
     watch: {
       '$route' (to, from) {
         this.transitionName = this.isBackPage('animate') ? 'slide-right' : 'slide-left'
-        this.isAnimate = to.meta && to.meta.hideAnimate
+        this.isAnimate = this.isTouch ? this.isTouch : to.meta && to.meta.hideAnimate
         if (!this.isBackPage('animate')) {
           this.resetPageKey('animate')
         }
